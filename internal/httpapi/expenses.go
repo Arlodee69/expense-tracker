@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"unicode/utf8"
 
 	"github.com/Arlodee69/expense-tracker/internal/expense"
 )
@@ -33,7 +34,7 @@ func HandlerExpenses(w http.ResponseWriter, r *http.Request, store *expense.Post
 			http.Error(w, "Invalid JSON request body", http.StatusBadRequest)
 			return
 		}
-		if newExpense.ID < 0 || newExpense.CategoryID < 0 || newExpense.Description == "" || newExpense.Amount <= 0 {
+		if newExpense.ID < 0 || newExpense.CategoryID <= 0 || newExpense.Description == "" || newExpense.Amount <= 0 || utf8.RuneCountInString(newExpense.Description) > 1000 {
 			http.Error(w, "Invalid expense fields", http.StatusBadRequest)
 			return
 		}
@@ -55,13 +56,22 @@ func HandlerExpenses(w http.ResponseWriter, r *http.Request, store *expense.Post
 			return
 		}
 	} else if r.Method == http.MethodDelete {
-		var deleteId int64
-		deleteId, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
-		if err != nil {
-			log.Printf("parse deleteId error: %v", err)
+		deleteID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+		if err != nil || deleteID <= 0 {
+			http.Error(w, "Expense id must be a positive integer", http.StatusBadRequest)
 			return
 		}
-
+		deleted, err := store.Delete(r.Context(), deleteID)
+		if err != nil {
+			log.Printf("delete expense %d: %v", deleteID, err)
+			http.Error(w, "Failed to delete expense", http.StatusInternalServerError)
+			return
+		}
+		if !deleted {
+			http.Error(w, "Expense not found", http.StatusNotFound)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 	} else {
 		log.Printf("method %v not allowed", r.Method)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)

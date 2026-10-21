@@ -39,8 +39,15 @@ func (p *PostgresPool) Delete(ctx context.Context, id int64) (bool, error) {
 	const query = `
 		DELETE FROM expenses WHERE id = $1
 	`
-
-	return true, nil
+	tag, err := p.db.Exec(ctx, query, id)
+	if err != nil {
+		return false, err
+	}
+	if affected := tag.RowsAffected(); affected == 1 {
+		return true, nil
+	} else {
+		return false, nil
+	}
 }
 
 func (p *PostgresPool) List(ctx context.Context) ([]Expense, error) {

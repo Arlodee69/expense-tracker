@@ -43,6 +43,9 @@ func main() {
 	mux.HandleFunc("POST /expenses", func(w http.ResponseWriter, r *http.Request) {
 		httpapi.HandlerExpenses(w, r, storage)
 	})
+	mux.HandleFunc("DELETE /expenses/{id}", func(w http.ResponseWriter, r *http.Request) {
+		httpapi.HandlerExpenses(w, r, storage)
+	})
 	log.Println("server started: http://localhost:8080")
 	log.Fatal(http.ListenAndServe("localhost:8080", mux))
 }

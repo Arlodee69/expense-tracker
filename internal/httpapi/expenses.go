@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/Arlodee69/expense-tracker/internal/expense"
@@ -53,5 +54,16 @@ func HandlerExpenses(w http.ResponseWriter, r *http.Request, store *expense.Post
 			log.Printf("encode created expense response: %v", err)
 			return
 		}
+	} else if r.Method == http.MethodDelete {
+		var deleteId int64
+		deleteId, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+		if err != nil {
+			log.Printf("parse deleteId error: %v", err)
+			return
+		}
+
+	} else {
+		log.Printf("method %v not allowed", r.Method)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
 }

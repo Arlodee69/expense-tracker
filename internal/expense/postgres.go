@@ -35,6 +35,14 @@ func (p *PostgresPool) Add(ctx context.Context, value Expense) (Expense, error) 
 	return value, nil
 }
 
+func (p *PostgresPool) Delete(ctx context.Context, id int64) (bool, error) {
+	const query = `
+		DELETE FROM expenses WHERE id = $1
+	`
+
+	return true, nil
+}
+
 func (p *PostgresPool) List(ctx context.Context) ([]Expense, error) {
 	const query = `
 		SELECT id, categoryid, amount, spenton, description, created_at
